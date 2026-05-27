@@ -931,39 +931,7 @@ function hideOverlay() {
   document.getElementById('overlay').classList.remove('on');
 }
 
-// ==========================================
-// LOCAL MOCK RUNNER PREVIEWS
-// ==========================================
-function runMockFallback(action, extraPayload) {
-  return new Promise((resolve) => {
-    if (action === "getDepartments") {
-      setTimeout(() => resolve(["งานเทคนิคการแพทย์", "งานรังสีวิทยา", "งานชันสูตร", "งานพยาบาล"]), 500);
-    } else if (action === "getDashboardData") {
-      setTimeout(() => resolve({
-        "BB0": [
-          { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก (Mock)", stock: 15, unit: "หลอด" },
-          { id: "BB002", name: "บีกเกอร์แก้ว 250 มล. (Mock)", stock: 4, unit: "ใบ" }
-        ],
-        "IMM": [
-          { id: "IMM001", name: "น้ำยาตรวจสารเคมี (Mock)", stock: 20, unit: "ขวด" },
-          { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิ (Mock)", stock: 1, unit: "กล่อง" }
-        ]
-      }), 500);
-    } else if (action === "getItemDetails") {
-      setTimeout(() => {
-        const mockDatabase = {
-          "BB001": { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก (Mock)", stock: 15, unit: "หลอด" },
-          "BB002": { id: "BB002", name: "บีกเกอร์แก้ว 250 มล. (Mock)", stock: 4, unit: "ใบ" },
-          "IMM001": { id: "IMM001", name: "น้ำยาตรวจสารเคมี (Mock)", stock: 20, unit: "ขวด" },
-          "IMM002": { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิ (Mock)", stock: 1, unit: "กล่อง" }
-        };
-        resolve(mockDatabase[extraPayload.id] || null);
-      }, 500);
-    } else if (action === "submitRequisition") {
-      setTimeout(() => resolve({ pdfUrl: "https://example.com/mock-invoice.pdf" }), 1000);
-    }
-  });
-}
+
 
 </script>
 </body>
