@@ -409,14 +409,14 @@
 <script>
 
 // ==========================================
-// https://script.google.com/macros/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec
+// ⚠️ ใส่ URL ของ GOOGLE APPS SCRIPT ของคุณที่นี่
 // ==========================================
 const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec"; 
 
 // ฟังก์ชันเชื่อมโยงข้อมูลหลังบ้านผ่าน HTTP POST (CORS Bypass)
 async function callGASAPI(action, extraPayload = {}) {
   // หากยังไม่ได้เปลี่ยน URL จะทำการใช้ Mock data จำลองหน้าเว็บให้ใช้เล่นได้ก่อน
-  if (GAS_WEB_APP_URL.includes("โปรดวาง_URL")) {
+  if (GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec")) {
     return runMockFallback(action, extraPayload);
   }
 
