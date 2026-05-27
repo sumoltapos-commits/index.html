@@ -411,12 +411,12 @@
 // ==========================================
 // ⚠️ ใส่ URL ของ GOOGLE APPS SCRIPT ของคุณที่นี่
 // ==========================================
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec"; 
+const GAS_WEB_APP_URL = "https://script.google.com/a/macros/allied.tu.ac.th/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec"; 
 
 // ฟังก์ชันเชื่อมโยงข้อมูลหลังบ้านผ่าน HTTP POST (CORS Bypass)
 async function callGASAPI(action, extraPayload = {}) {
   // หากยังไม่ได้เปลี่ยน URL จะทำการใช้ Mock data จำลองหน้าเว็บให้ใช้เล่นได้ก่อน
-  if (GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec")) {
+  if (GAS_WEB_APP_URL.includes("https://script.google.com/a/macros/allied.tu.ac.th/s/AKfycbynP8krNrVE9Q1vXSnFXYAoVbnyNtFBismBY15CKd4lHpAnC1OPki2x9hlCRicnR9rOpQ/exec")) {
     return runMockFallback(action, extraPayload);
   }
 
@@ -968,11 +968,3 @@ function runMockFallback(action, extraPayload) {
 </script>
 </body>
 </html>
-```
-eof
-
-* **ข้อควรปฏิบัติหลังจากเปลี่ยนไฟล์หน้าบ้าน:**
-  1. เปิดไฟล์ `index.html` ขึ้นมา
-  2. ไปที่บรรทัดที่ **432** ค้นหาตัวแปร:
-     ```javascript
-     const GAS_WEB_APP_URL = "โปรดวาง_URL_เว็บแอป_ของ_Google_ที่นี่";
