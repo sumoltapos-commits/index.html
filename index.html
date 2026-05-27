@@ -415,9 +415,6 @@ const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHoOzzefCjN02L
 
 // ฟังก์ชันเชื่อมโยงข้อมูลหลังบ้านผ่าน HTTP POST (CORS Bypass)
 async function callGASAPI(action, extraPayload = {}) {
-  // หากยังไม่ได้เปลี่ยน URL จะทำการใช้ Mock data จำลองหน้าเว็บให้ใช้เล่นได้ก่อน
-  if (GAS_WEB_APP_URL.includes("https://script.google.com/macros/s/AKfycbxHoOzzefCjN02L-Rf4Ml6jXRhC6U0RuZbrN7cOofQIjlVGGHZ-QjxQMVWX6pKpF6Zdmw/exec")) {
-    return runMockFallback(action, extraPayload);
   }
 
   const response = await fetch(GAS_WEB_APP_URL, {
