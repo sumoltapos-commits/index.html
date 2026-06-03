@@ -40,8 +40,8 @@
       position: sticky; top: 62px; z-index: 99;
     }
     .nav-tab {
-      flex: 1; padding: 12px; text-align: center;
-      font-size: 12px; font-weight: 600; color: var(--muted);
+      flex: 1; padding: 10px 4px; text-align: center;
+      font-size: 11px; font-weight: 600; color: var(--muted);
       border: none; background: none; cursor: pointer;
       border-bottom: 3px solid transparent; transition: all .2s;
       font-family: 'Sarabun', sans-serif;
@@ -77,7 +77,6 @@
     }
     #reader { width: 100%; border: none !important; }
     #reader video { border-radius: 11px; object-fit: cover; }
-    
     #reader__scan_region { background: transparent !important; }
     #reader__dashboard { display: none !important; }
 
@@ -283,6 +282,9 @@
   <button class="nav-tab" id="tab-stock" onclick="goTab('stock')">
     <i class="bi bi-table"></i>คงคลัง
   </button>
+  <button class="nav-tab" id="tab-stockin" onclick="goTab('stockin')">
+    <i class="bi bi-box-arrow-in-down"></i>รับเข้า
+  </button>
 </div>
 
 <div class="toasts" id="toasts"></div>
@@ -292,8 +294,7 @@
 
   <!-- ===== SCAN & SEARCH TAB ===== -->
   <div class="section active" id="section-scan">
-    
-    <!-- ช่องค้นหาพัสดุแบบพิมพ์เอง Real-time Autocomplete อยู่ด้านบนสุดเพื่อให้ใช้งานง่าย -->
+
     <div class="search-wrap">
       <input type="text" id="search-box" class="search-input"
         placeholder="🔍 พิมพ์ชื่อพัสดุ หรือรหัสพัสดุเพื่อค้นหา..."
@@ -305,18 +306,15 @@
       <div class="suggest-list" id="suggest-list"></div>
     </div>
 
-    <!-- กล้องสแกน -->
     <div class="card">
       <div class="card-head"><i class="bi bi-camera"></i> สแกน QR / บาร์โค้ดพัสดุ</div>
       <div class="card-body">
 
-        <!-- Status Box -->
         <div class="status-bar" id="status-bar" style="background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.3);color:#0369a1;">
           <i class="bi bi-info-circle-fill"></i>
           <span id="status-txt">กำลังเตรียมกล้อง...</span>
         </div>
 
-        <!-- Live Scanner Frame -->
         <div class="scanner-wrap" id="scanner-wrap">
           <div id="reader"></div>
           <div class="scan-overlay" id="scan-overlay">
@@ -328,7 +326,6 @@
           </div>
         </div>
 
-        <!-- Fallback File Upload (ปุ่มถ่ายรูปเมื่อกล้องสแกนเปิดไม่ได้ในเบราว์เซอร์นั้นๆ) -->
         <input type="file" id="file-input" accept="image/*" capture="environment" style="display:none" onchange="onFileUpload(event)">
         <button class="btn-photo" onclick="document.getElementById('file-input').click()">
           <i class="bi bi-camera-fill" style="font-size:17px;"></i> ถ่ายรูป QR / บาร์โค้ด (กรณีกล้องจอดำ)
@@ -337,7 +334,6 @@
       </div>
     </div>
 
-    <!-- แผงแสดงพัสดุที่ถูกเลือกเพื่อกำหนดจำนวน -->
     <div class="card" id="result-panel" style="display:none;">
       <div class="card-head"><i class="bi bi-box-seam"></i> พัสดุที่กำลังทำรายการ</div>
       <div class="card-body">
@@ -375,7 +371,6 @@
       </div>
     </div>
 
-    <!-- บันทึกข้อมูลและยืนยันการเบิกพัสดุ -->
     <div class="card" id="checkout-form" style="display:none;">
       <div class="card-head"><i class="bi bi-person-check"></i> บันทึกข้อมูลใบเบิกพัสดุ</div>
       <div class="card-body">
@@ -403,27 +398,167 @@
     </div>
   </div>
 
-</div>
+  <!-- ===== STOCK IN TAB ===== -->
+  <div class="section" id="section-stockin">
+
+    <div class="card">
+      <div class="card-head"><i class="bi bi-truck"></i> ข้อมูลการรับพัสดุเข้าคลัง</div>
+      <div class="card-body">
+        <label class="f-label">วันที่รับเข้า</label>
+        <input type="date" id="si-date" class="f-control">
+
+        <label class="f-label">เวลารับเข้า</label>
+        <input type="time" id="si-time" class="f-control">
+
+        <label class="f-label">บริษัทผู้ส่ง</label>
+        <input type="text" id="si-company" class="f-control" placeholder="พิมพ์ชื่อบริษัท">
+
+        <label class="f-label">เลขที่บิล / ใบส่งของ</label>
+        <input type="text" id="si-delivery" class="f-control" placeholder="เช่น INV-2024-00123">
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><i class="bi bi-search"></i> เพิ่มรายการพัสดุที่รับเข้า</div>
+      <div class="card-body">
+        <div class="search-wrap">
+          <input type="text" id="si-search" class="search-input"
+            placeholder="🔍 พิมพ์ชื่อหรือรหัสพัสดุ..."
+            oninput="onSiSearch(this.value)">
+          <button class="search-clear" id="si-clear" onclick="clearSiSearch()">
+            <i class="bi bi-x-circle-fill"></i>
+          </button>
+          <div class="suggest-list" id="si-suggest"></div>
+        </div>
+
+        <div id="si-result-panel" style="display:none;">
+          <div class="item-card">
+            <div>
+              <div class="item-name" id="si-r-name"></div>
+              <div class="item-code">รหัส: <span id="si-r-id"></span></div>
+            </div>
+            <div class="stock-pill" id="si-r-stock"></div>
+          </div>
+          <label class="f-label">จำนวนรับเข้า</label>
+          <div class="qty-row">
+            <button class="qty-btn" onclick="changeSiQty(-1)">−</button>
+            <input type="number" id="si-qty" class="qty-input" min="1" value="1">
+            <button class="qty-btn" onclick="changeSiQty(1)">+</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn-cancel" onclick="cancelSiResult()"><i class="bi bi-x"></i> ยกเลิก</button>
+            <button class="btn-primary" onclick="addToSiCart()"><i class="bi bi-plus-circle"></i> เพิ่มรายการ</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><i class="bi bi-list-check"></i> รายการพัสดุที่จะรับเข้าคลัง</div>
+      <div class="card-body">
+        <div class="cart-empty" id="si-empty">
+          <i class="bi bi-inbox"></i>
+          ยังไม่มีรายการพัสดุ<br><small>ค้นหาพัสดุด้านบนเพื่อเพิ่มรายการ</small>
+        </div>
+        <div id="si-list"></div>
+      </div>
+    </div>
+
+    <div id="si-submit-wrap" style="display:none; padding: 0 0 14px 0;">
+      <button id="si-submit-btn" class="btn-primary" style="width:100%;padding:14px;" onclick="sendStockIn()">
+        <i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง
+      </button>
+    </div>
+
+  </div>
+
+</div><!-- end .content -->
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
 
 // ==========================================
-// ⚠️ ใส่ URL ของ GOOGLE APPS SCRIPT ของคุณที่นี่
+// MOCK GOOGLE SCRIPT RUN FOR LOCAL PREVIEWS
 // ==========================================
-const GAS_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxHoOzzefCjN02L-Rf4Ml6jXRhC6U0RuZbrN7cOofQIjlVGGHZ-QjxQMVWX6pKpF6Zdmw/exec"; 
-
-// ฟังก์ชันเชื่อมโยงข้อมูลหลังบ้านผ่าน HTTP POST (CORS Bypass)
-async function callGASAPI(action, extraPayload = {}) {
-  const response = await fetch(GAS_WEB_APP_URL, {
-    method: "POST",
-    mode: "cors",
-    headers: {
-      "Content-Type": "text/plain;charset=utf-8"
-    },
-    body: JSON.stringify({ action: action, ...extraPayload })
-  });
-  return await response.json();
+if (typeof google === 'undefined') {
+  window.google = {
+    script: {
+      run: {
+        withSuccessHandler: function(successCallback) {
+          return {
+            withFailureHandler: function(failureCallback) {
+              return {
+                getDepartments: function() {
+                  setTimeout(() => successCallback(["งานบริหารทั่วไป", "งานเทคนิคการแพทย์", "งานรังสีวิทยา", "งานพยาบาล", "งานชันสูตร"]), 500);
+                },
+                getDashboardData: function() {
+                  setTimeout(() => successCallback({
+                    "BB0": [
+                      { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด" },
+                      { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ" }
+                    ],
+                    "IMM": [
+                      { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด" },
+                      { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง" }
+                    ]
+                  }), 500);
+                },
+                getItemDetails: function(id) {
+                  setTimeout(() => {
+                    const mockDatabase = {
+                      "BB001": { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด", row: 2 },
+                      "BB002": { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ", row: 3 },
+                      "IMM001": { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด", row: 4 },
+                      "IMM002": { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง", row: 5 }
+                    };
+                    successCallback(mockDatabase[id] || null);
+                  }, 500);
+                },
+                submitRequisition: function(payload) {
+                  setTimeout(() => successCallback({ success: true }), 1000);
+                },
+                submitStockIn: function(payload) {
+                  setTimeout(() => successCallback({ success: true, message: "บันทึกรับเข้าคลังเรียบร้อยแล้ว" }), 1000);
+                }
+              };
+            },
+            getDepartments: function() {
+              setTimeout(() => successCallback(["งานบริหารทั่วไป", "งานเทคนิคการแพทย์", "งานรังสีวิทยา", "งานพยาบาล", "งานชันสูตร"]), 500);
+            },
+            getDashboardData: function() {
+              setTimeout(() => successCallback({
+                "BB0": [
+                  { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด" },
+                  { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ" }
+                ],
+                "IMM": [
+                  { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด" },
+                  { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง" }
+                ]
+              }), 500);
+            },
+            getItemDetails: function(id) {
+              setTimeout(() => {
+                const mockDatabase = {
+                  "BB001": { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด", row: 2 },
+                  "BB002": { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ", row: 3 },
+                  "IMM001": { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด", row: 4 },
+                  "IMM002": { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง", row: 5 }
+                };
+                successCallback(mockDatabase[id] || null);
+              }, 500);
+            },
+            submitRequisition: function(payload) {
+              setTimeout(() => successCallback({ success: true }), 1000);
+            },
+            submitStockIn: function(payload) {
+              setTimeout(() => successCallback({ success: true, message: "บันทึกรับเข้าคลังเรียบร้อยแล้ว" }), 1000);
+            }
+          };
+        }
+      }
+    }
+  };
 }
 
 // ==========================================
@@ -434,51 +569,51 @@ let cart = [];
 let html5QrScanner = null;
 let cameraOn = false;
 let searchTimer = null;
-let allItems = []; 
+let allItems = [];
 let itemsLoaded = false;
+
+// Stock In state
+let siCart = [];
+let siItem = null;
 
 // ==========================================
 // LIFE CYCLE & LOADING
 // ==========================================
 window.onload = () => {
   loadDepts();
-  loadAllItems(); 
+  loadAllItems();
   startCamera();
 };
 
 function loadDepts() {
-  callGASAPI("getDepartments")
-    .then(depts => {
-      document.getElementById('dept').innerHTML =
-        depts.map(d => `<option value="${d}">${d}</option>`).join('');
-    })
-    .catch(err => console.error("Error loading departments:", err));
+  google.script.run.withSuccessHandler(depts => {
+    document.getElementById('dept').innerHTML =
+      depts.map(d => `<option value="${d}">${d}</option>`).join('');
+  }).getDepartments();
 }
 
 function loadAllItems() {
-  callGASAPI("getDashboardData")
-    .then(data => {
-      allItems = [];
-      for (const prefix in data) {
-        data[prefix].forEach(item => {
-          allItems.push({
-            id: item.id ? item.id.toString().trim() : '',
-            name: item.name ? item.name.toString().trim() : '',
-            stock: item.stock ? Number(item.stock) : 0,
-            unit: item.unit ? item.unit.toString().trim() : 'หน่วย'
-          });
+  google.script.run.withSuccessHandler(data => {
+    allItems = [];
+    for (const prefix in data) {
+      data[prefix].forEach(item => {
+        allItems.push({
+          id: item.id ? item.id.toString().trim() : '',
+          name: item.name ? item.name.toString().trim() : '',
+          stock: item.stock ? Number(item.stock) : 0,
+          unit: item.unit ? item.unit.toString().trim() : 'หน่วย'
         });
-      }
-      itemsLoaded = true;
-    })
-    .catch(err => console.error("Error loading items:", err));
+      });
+    }
+    itemsLoaded = true;
+  }).getDashboardData();
 }
 
 // ==========================================
 // NAVIGATION TAB
 // ==========================================
 function goTab(tab) {
-  ['scan','cart','stock'].forEach(t => {
+  ['scan','cart','stock','stockin'].forEach(t => {
     document.getElementById('tab-'+t).classList.toggle('active', t===tab);
     document.getElementById('section-'+t).classList.toggle('active', t===tab);
   });
@@ -487,8 +622,9 @@ function goTab(tab) {
   } else {
     if (!cameraOn) startCamera();
   }
-  if (tab === 'cart') renderCart();
-  if (tab === 'stock') loadDash();
+  if (tab === 'cart')    renderCart();
+  if (tab === 'stock')   loadDash();
+  if (tab === 'stockin') initSiDefaults();
 }
 
 // ==========================================
@@ -516,7 +652,7 @@ async function startCamera() {
     };
 
     await html5QrScanner.start(
-      { facingMode: "environment" }, 
+      { facingMode: "environment" },
       config,
       (decodedText) => {
         stopCamera();
@@ -563,9 +699,9 @@ function setStatus(msg, type) {
   };
   const [bg, bd, tx] = colors[type] || colors.info;
   const b = document.getElementById('status-bar');
-  b.style.background   = bg;
-  b.style.borderColor  = bd;
-  b.style.color        = tx;
+  b.style.background  = bg;
+  b.style.borderColor = bd;
+  b.style.color       = tx;
   document.getElementById('status-txt').textContent = msg;
 }
 
@@ -610,11 +746,8 @@ function onSearchInput(val) {
   const clearBtn = document.getElementById('search-clear');
   clearBtn.style.display = val ? 'block' : 'none';
   clearTimeout(searchTimer);
-  
-  if (!val.trim()) { 
-    hideSuggest(); 
-    return; 
-  }
+
+  if (!val.trim()) { hideSuggest(); return; }
 
   if (itemsLoaded && allItems.length) {
     const matched = filterItems(val.trim());
@@ -628,36 +761,24 @@ function onSearchInput(val) {
 
 function filterItems(query) {
   const qLower = query.toLowerCase();
-  return allItems.filter(item => 
-    (item.id && item.id.toLowerCase().includes(qLower)) || 
+  return allItems.filter(item =>
+    (item.id && item.id.toLowerCase().includes(qLower)) ||
     (item.name && item.name.toLowerCase().includes(qLower))
   ).slice(0, 8);
 }
 
 function showSuggest(items) {
   const listEl = document.getElementById('suggest-list');
-  if (!items.length) { 
-    hideSuggest(); 
-    return; 
-  }
-  
+  if (!items.length) { hideSuggest(); return; }
   const query = document.getElementById('search-box').value.trim();
-  
   listEl.innerHTML = items.map(item => {
-    const highlightText = (text) => {
-      if (!query) return text;
-      const regex = new RegExp(`(${query})`, 'gi');
-      return text.replace(regex, '<span class="suggest-highlight">$1</span>');
-    };
-
+    const hl = (text) => text.replace(new RegExp(`(${query})`, 'gi'), '<span class="suggest-highlight">$1</span>');
     return `
       <div class="suggest-item" onclick="pickItem('${item.id}')">
-        <div class="s-name">${highlightText(item.name)}</div>
-        <div class="s-id">รหัสพัสดุ: ${highlightText(item.id)} &nbsp;|&nbsp; ยอดคงคลัง: ${item.stock} ${item.unit}</div>
-      </div>
-    `;
+        <div class="s-name">${hl(item.name)}</div>
+        <div class="s-id">รหัสพัสดุ: ${hl(item.id)} &nbsp;|&nbsp; ยอดคงคลัง: ${item.stock} ${item.unit}</div>
+      </div>`;
   }).join('');
-  
   listEl.style.display = 'block';
 }
 
@@ -688,8 +809,8 @@ function pickItem(id) {
   stopCamera();
   showOverlay('กำลังดึงฐานข้อมูลพัสดุ...');
 
-  callGASAPI("getItemDetails", { id: id })
-    .then(item => {
+  google.script.run
+    .withSuccessHandler(item => {
       hideOverlay();
       if (item) {
         scannedItem = item;
@@ -701,21 +822,20 @@ function pickItem(id) {
         startCamera();
       }
     })
-    .catch(err => {
+    .withFailureHandler(err => {
       hideOverlay();
-      toast('ระบบขัดข้อง: ' + err.toString(), 'err');
+      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
       startCamera();
-    });
+    })
+    .getItemDetails(id);
 }
 
 function showResult(item) {
   document.getElementById('r-name').textContent  = item.name;
   document.getElementById('r-id').textContent    = item.id;
   document.getElementById('r-stock').textContent = item.stock + ' ' + item.unit;
-  
   document.getElementById('qty-input').value = 1;
   document.getElementById('qty-input').max   = item.stock;
-  
   document.getElementById('result-panel').style.display = 'block';
   document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
@@ -731,9 +851,8 @@ function cancelResult() {
 // ==========================================
 function changeQty(diff) {
   const el = document.getElementById('qty-input');
-  let currentVal = parseInt(el.value) || 1;
   const maxLimit = scannedItem ? scannedItem.stock : 999;
-  el.value = Math.max(1, Math.min(currentVal + diff, maxLimit));
+  el.value = Math.max(1, Math.min((parseInt(el.value) || 1) + diff, maxLimit));
 }
 
 // ==========================================
@@ -742,7 +861,7 @@ function changeQty(diff) {
 function addToCart() {
   if (!scannedItem) return;
   const qty = parseInt(document.getElementById('qty-input').value);
-  
+
   if (!qty || qty <= 0) return toast('กรุณาระบุจำนวนเบิกที่ถูกต้อง', 'err');
   if (qty > scannedItem.stock) return toast('พัสดุมีจำนวนคงคลังไม่พอให้เบิก', 'err');
 
@@ -755,12 +874,7 @@ function addToCart() {
     cart[existingIndex].qty = totalNewQty;
     toast('รวม ' + scannedItem.name + ' ในตะกร้าเป็น ' + totalNewQty + ' ' + scannedItem.unit, 'ok');
   } else {
-    cart.push({
-      id: scannedItem.id,
-      name: scannedItem.name,
-      qty: qty,
-      unit: scannedItem.unit
-    });
+    cart.push({ id: scannedItem.id, name: scannedItem.name, qty: qty, unit: scannedItem.unit });
     toast('เพิ่มพัสดุลงตะกร้าเรียบร้อย', 'ok');
   }
 
@@ -783,20 +897,20 @@ function updateBadge() {
 }
 
 function renderCart() {
-  const listEl = document.getElementById('cart-list');
+  const listEl  = document.getElementById('cart-list');
   const emptyEl = document.getElementById('cart-empty');
-  const formEl = document.getElementById('checkout-form');
-  
+  const formEl  = document.getElementById('checkout-form');
+
   if (!cart.length) {
     emptyEl.style.display = 'block';
     listEl.innerHTML = '';
     formEl.style.display = 'none';
     return;
   }
-  
+
   emptyEl.style.display = 'none';
   formEl.style.display  = 'block';
-  
+
   listEl.innerHTML = cart.map((item, index) => `
     <div class="cart-item">
       <div class="cart-item-info">
@@ -812,14 +926,14 @@ function renderCart() {
 }
 
 // ==========================================
-// REQUISITION TRANSMISSION & PDF OPENER
+// REQUISITION SUBMISSION
 // ==========================================
 function sendData() {
   if (!cart.length) return toast('ตะกร้าพัสดุว่างเปล่า!', 'err');
-  const dept = document.getElementById('dept').value;
+  const dept  = document.getElementById('dept').value;
   const staff = document.getElementById('staff').value.trim();
-  
-  if (!dept) return toast('กรุณาเลือกหน่วยงาน / แผนกผู้เบิก', 'err');
+
+  if (!dept)  return toast('กรุณาเลือกหน่วยงาน / แผนกผู้เบิก', 'err');
   if (!staff) return toast('กรุณาระบุชื่อ-นามสกุลผู้เบิกพัสดุ', 'err');
 
   const submitBtn = document.getElementById('submit-btn');
@@ -827,35 +941,35 @@ function sendData() {
   submitBtn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูลและสรุปผล...';
   showOverlay('ระบบกำลังหักยอดคลัง และจัดเตรียมแบบฟอร์ม PDF ใบจ่าย...');
 
-  callGASAPI("submitRequisition", { payload: { items: cart, dept: dept, staff: staff } })
-    .then(res => {
+  google.script.run
+    .withSuccessHandler(res => {
       hideOverlay();
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
-      
+
       if (res.error) return toast(res.error, 'err');
-      
+
       cart = [];
       updateBadge();
       renderCart();
       document.getElementById('staff').value = '';
-      
+
       toast('ระบบทำรายการเบิกจ่ายเสร็จสมบูรณ์!', 'ok');
-      
       loadAllItems();
-      
-      setTimeout(() => {
-        window.open(res.pdfUrl, '_blank');
-      }, 300);
-      
+
+      if (res.pdfUrl) {
+        setTimeout(() => { window.open(res.pdfUrl, '_blank'); }, 300);
+      }
+
       goTab('scan');
     })
-    .catch(err => {
+    .withFailureHandler(err => {
       hideOverlay();
       submitBtn.disabled = false;
       submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
-      toast('ระบบขัดข้อง: ' + err.toString(), 'err');
-    });
+      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
+    })
+    .submitRequisition({ items: cart, dept: dept, staff: staff });
 }
 
 // ==========================================
@@ -867,17 +981,15 @@ function loadDash() {
     <div style="text-align:center;padding:28px;color:var(--muted);">
       <div class="spin" style="width:28px;height:28px;border-width:3px;border-color:rgba(100,116,139,.3);border-top-color:var(--muted);"></div>
       <p style="margin-top:10px;font-size:13px;">กำลังดึงยอดคงคลังล่าสุด...</p>
-    </div>
-  `;
-  
-  callGASAPI("getDashboardData")
-    .then(data => {
+    </div>`;
+
+  google.script.run
+    .withSuccessHandler(data => {
       const keys = Object.keys(data).sort();
       if (!keys.length) {
         contentEl.innerHTML = '<p style="text-align:center;padding:20px;color:var(--muted);">ไม่พบข้อมูลพัสดุในระบบ</p>';
         return;
       }
-      
       contentEl.innerHTML = keys.map(prefix => `
         <div class="stock-group">
           <div class="cat-head">หมวด ${prefix} (${data[prefix].length} รายการ)</div>
@@ -898,13 +1010,185 @@ function loadDash() {
         </div>
       `).join('');
     })
-    .catch(err => {
+    .withFailureHandler(() => {
       contentEl.innerHTML = '<p style="text-align:center;color:var(--danger);padding:20px;">เชื่อมต่อฐานข้อมูลสต็อกพัสดุล้มเหลว</p>';
-    });
+    })
+    .getDashboardData();
 }
 
 // ==========================================
-// TOAST NOTIFICATIONS HELPERS
+// STOCK IN FUNCTIONS
+// ==========================================
+function initSiDefaults() {
+  const now = new Date();
+  const dateStr = now.toISOString().slice(0, 10);
+  const timeStr = now.toTimeString().slice(0, 5);
+  const dateEl = document.getElementById('si-date');
+  const timeEl = document.getElementById('si-time');
+  if (!dateEl.value) dateEl.value = dateStr;
+  if (!timeEl.value) timeEl.value = timeStr;
+}
+
+function onSiSearch(val) {
+  document.getElementById('si-clear').style.display = val ? 'block' : 'none';
+  if (!val.trim()) { hideSiSuggest(); return; }
+  const matched = filterItems(val.trim());
+  showSiSuggest(matched, val.trim());
+}
+
+function showSiSuggest(items, query) {
+  const listEl = document.getElementById('si-suggest');
+  if (!items.length) { hideSiSuggest(); return; }
+  listEl.innerHTML = items.map(item => {
+    const hl = (text) => text.replace(new RegExp(`(${query})`, 'gi'), '<span class="suggest-highlight">$1</span>');
+    return `
+      <div class="suggest-item" onclick="pickSiItem('${item.id}')">
+        <div class="s-name">${hl(item.name)}</div>
+        <div class="s-id">รหัส: ${hl(item.id)} | คงคลัง: ${item.stock} ${item.unit}</div>
+      </div>`;
+  }).join('');
+  listEl.style.display = 'block';
+}
+
+function hideSiSuggest() {
+  document.getElementById('si-suggest').style.display = 'none';
+}
+
+function clearSiSearch() {
+  document.getElementById('si-search').value = '';
+  document.getElementById('si-clear').style.display = 'none';
+  hideSiSuggest();
+}
+
+function pickSiItem(id) {
+  hideSiSuggest();
+  clearSiSearch();
+  showOverlay('กำลังดึงข้อมูลพัสดุ...');
+  google.script.run
+    .withSuccessHandler(item => {
+      hideOverlay();
+      if (item) {
+        siItem = item;
+        document.getElementById('si-r-name').textContent  = item.name;
+        document.getElementById('si-r-id').textContent    = item.id;
+        document.getElementById('si-r-stock').textContent = 'คงเหลือ: ' + item.stock + ' ' + item.unit;
+        document.getElementById('si-qty').value = 1;
+        document.getElementById('si-result-panel').style.display = 'block';
+      } else {
+        toast('ไม่พบพัสดุรหัส: ' + id, 'err');
+      }
+    })
+    .withFailureHandler(err => {
+      hideOverlay();
+      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
+    })
+    .getItemDetails(id);
+}
+
+function changeSiQty(diff) {
+  const el = document.getElementById('si-qty');
+  el.value = Math.max(1, (parseInt(el.value) || 1) + diff);
+}
+
+function cancelSiResult() {
+  siItem = null;
+  document.getElementById('si-result-panel').style.display = 'none';
+}
+
+function addToSiCart() {
+  if (!siItem) return;
+  const qty = parseInt(document.getElementById('si-qty').value);
+  if (!qty || qty <= 0) return toast('กรุณาระบุจำนวน', 'err');
+
+  const existingIndex = siCart.findIndex(c => c.id === siItem.id);
+  if (existingIndex >= 0) {
+    siCart[existingIndex].qty += qty;
+    toast('รวม ' + siItem.name + ' เป็น ' + siCart[existingIndex].qty + ' ' + siItem.unit, 'ok');
+  } else {
+    siCart.push({ id: siItem.id, name: siItem.name, qty: qty, unit: siItem.unit });
+    toast('เพิ่ม ' + siItem.name + ' แล้ว', 'ok');
+  }
+  siItem = null;
+  document.getElementById('si-result-panel').style.display = 'none';
+  renderSiCart();
+}
+
+function removeSiItem(index) {
+  siCart.splice(index, 1);
+  renderSiCart();
+}
+
+function renderSiCart() {
+  const listEl  = document.getElementById('si-list');
+  const emptyEl = document.getElementById('si-empty');
+  const wrapEl  = document.getElementById('si-submit-wrap');
+
+  if (!siCart.length) {
+    emptyEl.style.display = 'block';
+    listEl.innerHTML = '';
+    wrapEl.style.display = 'none';
+    return;
+  }
+  emptyEl.style.display = 'none';
+  wrapEl.style.display  = 'block';
+  listEl.innerHTML = siCart.map((item, i) => `
+    <div class="cart-item">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-sub">รหัส: ${item.id}</div>
+      </div>
+      <span class="cart-qty-pill">+${item.qty} ${item.unit}</span>
+      <button class="cart-del" onclick="removeSiItem(${i})">
+        <i class="bi bi-trash3-fill"></i>
+      </button>
+    </div>
+  `).join('');
+}
+
+function sendStockIn() {
+  if (!siCart.length) return toast('ยังไม่มีรายการพัสดุ', 'err');
+
+  const dateStr    = document.getElementById('si-date').value;
+  const timeStr    = document.getElementById('si-time').value;
+  const company    = document.getElementById('si-company').value.trim();
+  const deliveryNo = document.getElementById('si-delivery').value.trim();
+
+  if (!dateStr)    return toast('กรุณาระบุวันที่รับเข้า', 'err');
+  if (!timeStr)    return toast('กรุณาระบุเวลารับเข้า', 'err');
+  if (!company)    return toast('กรุณาระบุบริษัทผู้ส่ง', 'err');
+  if (!deliveryNo) return toast('กรุณาระบุเลขที่บิล', 'err');
+
+  const btn = document.getElementById('si-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูล...';
+  showOverlay('กำลังเพิ่มยอดสต็อกพัสดุเข้าคลัง...');
+
+  google.script.run
+    .withSuccessHandler(res => {
+      hideOverlay();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
+      if (res.error) return toast(res.error, 'err');
+
+      siCart = [];
+      renderSiCart();
+      document.getElementById('si-company').value  = '';
+      document.getElementById('si-delivery').value = '';
+
+      toast('บันทึกรับพัสดุเข้าคลังเรียบร้อยแล้ว!', 'ok');
+      loadAllItems();
+    })
+    .withFailureHandler(err => {
+      hideOverlay();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
+      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
+    })
+    .submitStockIn({ items: siCart, dateStr, timeStr, company, deliveryNo });
+}
+
+// ==========================================
+// TOAST & OVERLAY HELPERS
 // ==========================================
 function toast(msg, type) {
   const toastsBox = document.getElementById('toasts');
@@ -912,9 +1196,7 @@ function toast(msg, type) {
   toastEl.className = 'toast ' + (type || '');
   toastEl.textContent = msg;
   toastsBox.appendChild(toastEl);
-  setTimeout(() => {
-    toastEl.remove();
-  }, 2600);
+  setTimeout(() => { toastEl.remove(); }, 2600);
 }
 
 function showOverlay(txt) {
@@ -925,8 +1207,6 @@ function showOverlay(txt) {
 function hideOverlay() {
   document.getElementById('overlay').classList.remove('on');
 }
-
-
 
 </script>
 </body>
