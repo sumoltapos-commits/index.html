@@ -482,7 +482,7 @@
 // ==========================================
 // GAS Web App URL — เชื่อมกับ Google Sheets จริง
 // ==========================================
-https://script.google.com/macros/s/AKfycbxHoOzzefCjN02L-Rf4Ml6jXRhC6U0RuZbrN7cOofQIjlVGGHZ-QjxQMVWX6pKpF6Zdmw/exec
+const GAS_URL = "https://script.google.com/a/macros/allied.tu.ac.th/s/AKfycbxHoOzzefCjN02L-Rf4Ml6jXRhC6U0RuZbrN7cOofQIjlVGGHZ-QjxQMVWX6pKpF6Zdmw/exec";
 
 // ฟังก์ชันกลางสำหรับเรียก GAS — ใช้แทน google.script.run ทุกที่
 async function callGAS(action, extra = {}) {
@@ -493,7 +493,8 @@ async function callGAS(action, extra = {}) {
   });
   const res = await fetch(GAS_URL + "?" + params.toString(), {
     method: "GET",
-    redirect: "follow"
+    redirect: "follow",
+    mode: "cors"
   });
   const text = await res.text();
   try {
@@ -874,27 +875,49 @@ async function sendData() {
 
   const submitBtn = document.getElementById('submit-btn');
   submitBtn.disabled = true;
-  submitBtn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูลและสรุปผล...';
-  showOverlay('ระบบกำลังหักยอดคลัง และจัดเตรียมแบบฟอร์ม PDF ใบจ่าย...');
+  submitBtn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูล...';
+  showOverlay('กำลังหักยอดคลัง และส่งอีเมล PDF...');
+
+  // timeout 30 วินาที ป้องกันค้างตลอดกาล
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
 
   try {
-    const res = await callGAS("submitRequisition", { payload: { items: cart, dept, staff } });
+    const params = new URLSearchParams({
+      action: "submitRequisition",
+      payload: JSON.stringify({ items: cart, dept, staff }),
+      id: ""
+    });
+    const res = await fetch(GAS_URL + "?" + params.toString(), {
+      method: "GET",
+      redirect: "follow",
+      signal: controller.signal
+    });
+    clearTimeout(timeout);
+    const text = await res.text();
+    const json = JSON.parse(text);
+
     hideOverlay();
     submitBtn.disabled = false;
     submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
+
+    if (json.error) return toast('Error: ' + json.error, 'err');
+
     cart = [];
     updateBadge();
     renderCart();
     document.getElementById('staff').value = '';
-    toast('ระบบทำรายการเบิกจ่ายเสร็จสมบูรณ์!', 'ok');
+    toast('บันทึกเบิกพัสดุเสร็จสมบูรณ์!', 'ok');
     loadAllItems();
-    if (res.pdfUrl) setTimeout(() => window.open(res.pdfUrl, '_blank'), 300);
     goTab('scan');
+
   } catch(e) {
+    clearTimeout(timeout);
     hideOverlay();
     submitBtn.disabled = false;
     submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
-    toast('ระบบขัดข้อง: ' + e.message, 'err');
+    toast('Error: ' + e.message, 'err');
+    alert('Debug: ' + e.message);
   }
 }
 
