@@ -476,89 +476,33 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
 
 // ==========================================
-// MOCK GOOGLE SCRIPT RUN FOR LOCAL PREVIEWS
+// GAS Web App URL — เชื่อมกับ Google Sheets จริง
 // ==========================================
-if (typeof google === 'undefined') {
-  window.google = {
-    script: {
-      run: {
-        withSuccessHandler: function(successCallback) {
-          return {
-            withFailureHandler: function(failureCallback) {
-              return {
-                getDepartments: function() {
-                  setTimeout(() => successCallback(["งานบริหารทั่วไป", "งานเทคนิคการแพทย์", "งานรังสีวิทยา", "งานพยาบาล", "งานชันสูตร"]), 500);
-                },
-                getDashboardData: function() {
-                  setTimeout(() => successCallback({
-                    "BB0": [
-                      { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด" },
-                      { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ" }
-                    ],
-                    "IMM": [
-                      { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด" },
-                      { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง" }
-                    ]
-                  }), 500);
-                },
-                getItemDetails: function(id) {
-                  setTimeout(() => {
-                    const mockDatabase = {
-                      "BB001": { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด", row: 2 },
-                      "BB002": { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ", row: 3 },
-                      "IMM001": { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด", row: 4 },
-                      "IMM002": { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง", row: 5 }
-                    };
-                    successCallback(mockDatabase[id] || null);
-                  }, 500);
-                },
-                submitRequisition: function(payload) {
-                  setTimeout(() => successCallback({ success: true }), 1000);
-                },
-                submitStockIn: function(payload) {
-                  setTimeout(() => successCallback({ success: true, message: "บันทึกรับเข้าคลังเรียบร้อยแล้ว" }), 1000);
-                }
-              };
-            },
-            getDepartments: function() {
-              setTimeout(() => successCallback(["งานบริหารทั่วไป", "งานเทคนิคการแพทย์", "งานรังสีวิทยา", "งานพยาบาล", "งานชันสูตร"]), 500);
-            },
-            getDashboardData: function() {
-              setTimeout(() => successCallback({
-                "BB0": [
-                  { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด" },
-                  { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ" }
-                ],
-                "IMM": [
-                  { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด" },
-                  { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง" }
-                ]
-              }), 500);
-            },
-            getItemDetails: function(id) {
-              setTimeout(() => {
-                const mockDatabase = {
-                  "BB001": { id: "BB001", name: "หลอดแก้วทดลองขนาดเล็ก", stock: 15, unit: "หลอด", row: 2 },
-                  "BB002": { id: "BB002", name: "บีกเกอร์แก้ว 250 มล.", stock: 4, unit: "ใบ", row: 3 },
-                  "IMM001": { id: "IMM001", name: "น้ำยาตรวจวิเคราะห์สารเคมี", stock: 20, unit: "ขวด", row: 4 },
-                  "IMM002": { id: "IMM002", name: "แผ่นตรวจวัดอุณหภูมิคลัง", stock: 1, unit: "กล่อง", row: 5 }
-                };
-                successCallback(mockDatabase[id] || null);
-              }, 500);
-            },
-            submitRequisition: function(payload) {
-              setTimeout(() => successCallback({ success: true }), 1000);
-            },
-            submitStockIn: function(payload) {
-              setTimeout(() => successCallback({ success: true, message: "บันทึกรับเข้าคลังเรียบร้อยแล้ว" }), 1000);
-            }
-          };
-        }
-      }
-    }
-  };
+const GAS_URL = "https://script.google.com/a/macros/allied.tu.ac.th/s/AKfycbxHoOzzefCjN02L-Rf4Ml6jXRhC6U0RuZbrN7cOofQIjlVGGHZ-QjxQMVWX6pKpF6Zdmw/exec";
+
+// ฟังก์ชันกลางสำหรับเรียก GAS — ใช้แทน google.script.run ทุกที่
+async function callGAS(action, extra = {}) {
+  const params = new URLSearchParams({
+    action,
+    payload: JSON.stringify(extra.payload || null),
+    id: extra.id || ""
+  });
+  const res = await fetch(GAS_URL + "?" + params.toString(), {
+    method: "GET",
+    redirect: "follow"
+  });
+  const text = await res.text();
+  try {
+    const json = JSON.parse(text);
+    if (json.error) throw new Error(json.error);
+    return json;
+  } catch(e) {
+    throw new Error("GAS response error: " + text.substring(0, 100));
+  }
 }
 
 // ==========================================
@@ -585,15 +529,19 @@ window.onload = () => {
   startCamera();
 };
 
-function loadDepts() {
-  google.script.run.withSuccessHandler(depts => {
+async function loadDepts() {
+  try {
+    const depts = await callGAS("getDepartments");
     document.getElementById('dept').innerHTML =
       depts.map(d => `<option value="${d}">${d}</option>`).join('');
-  }).getDepartments();
+  } catch(e) {
+    document.getElementById('dept').innerHTML = '<option value="ทั่วไป">ทั่วไป</option>';
+  }
 }
 
-function loadAllItems() {
-  google.script.run.withSuccessHandler(data => {
+async function loadAllItems() {
+  try {
+    const data = await callGAS("getDashboardData");
     allItems = [];
     for (const prefix in data) {
       data[prefix].forEach(item => {
@@ -606,7 +554,9 @@ function loadAllItems() {
       });
     }
     itemsLoaded = true;
-  }).getDashboardData();
+  } catch(e) {
+    console.error("loadAllItems error:", e);
+  }
 }
 
 // ==========================================
@@ -746,16 +696,11 @@ function onSearchInput(val) {
   const clearBtn = document.getElementById('search-clear');
   clearBtn.style.display = val ? 'block' : 'none';
   clearTimeout(searchTimer);
-
   if (!val.trim()) { hideSuggest(); return; }
-
   if (itemsLoaded && allItems.length) {
-    const matched = filterItems(val.trim());
-    showSuggest(matched);
+    showSuggest(filterItems(val.trim()));
   } else {
-    searchTimer = setTimeout(() => {
-      pickItem(val.trim());
-    }, 600);
+    searchTimer = setTimeout(() => pickItem(val.trim()), 600);
   }
 }
 
@@ -802,32 +747,29 @@ function clearSearch() {
 // ==========================================
 // SELECTION HANDLING
 // ==========================================
-function pickItem(id) {
+async function pickItem(id) {
   if (!id) return;
   hideSuggest();
   clearSearch();
   stopCamera();
   showOverlay('กำลังดึงฐานข้อมูลพัสดุ...');
-
-  google.script.run
-    .withSuccessHandler(item => {
-      hideOverlay();
-      if (item) {
-        scannedItem = item;
-        showResult(item);
-        setStatus('พัสดุที่เลือก: ' + item.name, 'ok');
-      } else {
-        toast('ไม่พบพัสดุรหัส: ' + id, 'err');
-        setStatus('ไม่พบรหัสสินค้า ' + id, 'warn');
-        startCamera();
-      }
-    })
-    .withFailureHandler(err => {
-      hideOverlay();
-      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
+  try {
+    const item = await callGAS("getItemDetails", { id });
+    hideOverlay();
+    if (item) {
+      scannedItem = item;
+      showResult(item);
+      setStatus('พัสดุที่เลือก: ' + item.name, 'ok');
+    } else {
+      toast('ไม่พบพัสดุรหัส: ' + id, 'err');
+      setStatus('ไม่พบรหัสสินค้า ' + id, 'warn');
       startCamera();
-    })
-    .getItemDetails(id);
+    }
+  } catch(e) {
+    hideOverlay();
+    toast('ระบบขัดข้อง: ' + e.message, 'err');
+    startCamera();
+  }
 }
 
 function showResult(item) {
@@ -861,16 +803,13 @@ function changeQty(diff) {
 function addToCart() {
   if (!scannedItem) return;
   const qty = parseInt(document.getElementById('qty-input').value);
-
   if (!qty || qty <= 0) return toast('กรุณาระบุจำนวนเบิกที่ถูกต้อง', 'err');
   if (qty > scannedItem.stock) return toast('พัสดุมีจำนวนคงคลังไม่พอให้เบิก', 'err');
 
   const existingIndex = cart.findIndex(c => c.id === scannedItem.id);
   if (existingIndex >= 0) {
     const totalNewQty = cart[existingIndex].qty + qty;
-    if (totalNewQty > scannedItem.stock) {
-      return toast('จำนวนรวมในตะกร้าเกินสต็อกคงเหลือในคลัง', 'err');
-    }
+    if (totalNewQty > scannedItem.stock) return toast('จำนวนรวมในตะกร้าเกินสต็อกคงเหลือในคลัง', 'err');
     cart[existingIndex].qty = totalNewQty;
     toast('รวม ' + scannedItem.name + ' ในตะกร้าเป็น ' + totalNewQty + ' ' + scannedItem.unit, 'ok');
   } else {
@@ -907,10 +846,8 @@ function renderCart() {
     formEl.style.display = 'none';
     return;
   }
-
   emptyEl.style.display = 'none';
   formEl.style.display  = 'block';
-
   listEl.innerHTML = cart.map((item, index) => `
     <div class="cart-item">
       <div class="cart-item-info">
@@ -928,11 +865,10 @@ function renderCart() {
 // ==========================================
 // REQUISITION SUBMISSION
 // ==========================================
-function sendData() {
+async function sendData() {
   if (!cart.length) return toast('ตะกร้าพัสดุว่างเปล่า!', 'err');
   const dept  = document.getElementById('dept').value;
   const staff = document.getElementById('staff').value.trim();
-
   if (!dept)  return toast('กรุณาเลือกหน่วยงาน / แผนกผู้เบิก', 'err');
   if (!staff) return toast('กรุณาระบุชื่อ-นามสกุลผู้เบิกพัสดุ', 'err');
 
@@ -941,79 +877,66 @@ function sendData() {
   submitBtn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูลและสรุปผล...';
   showOverlay('ระบบกำลังหักยอดคลัง และจัดเตรียมแบบฟอร์ม PDF ใบจ่าย...');
 
-  google.script.run
-    .withSuccessHandler(res => {
-      hideOverlay();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
-
-      if (res.error) return toast(res.error, 'err');
-
-      cart = [];
-      updateBadge();
-      renderCart();
-      document.getElementById('staff').value = '';
-
-      toast('ระบบทำรายการเบิกจ่ายเสร็จสมบูรณ์!', 'ok');
-      loadAllItems();
-
-      if (res.pdfUrl) {
-        setTimeout(() => { window.open(res.pdfUrl, '_blank'); }, 300);
-      }
-
-      goTab('scan');
-    })
-    .withFailureHandler(err => {
-      hideOverlay();
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
-      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
-    })
-    .submitRequisition({ items: cart, dept: dept, staff: staff });
+  try {
+    const res = await callGAS("submitRequisition", { payload: { items: cart, dept, staff } });
+    hideOverlay();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
+    cart = [];
+    updateBadge();
+    renderCart();
+    document.getElementById('staff').value = '';
+    toast('ระบบทำรายการเบิกจ่ายเสร็จสมบูรณ์!', 'ok');
+    loadAllItems();
+    if (res.pdfUrl) setTimeout(() => window.open(res.pdfUrl, '_blank'), 300);
+    goTab('scan');
+  } catch(e) {
+    hideOverlay();
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="bi bi-file-earmark-check"></i> ยืนยันการเบิกทั้งหมด & ออก PDF';
+    toast('ระบบขัดข้อง: ' + e.message, 'err');
+  }
 }
 
 // ==========================================
 // STOCK VIEWER (DASHBOARD)
 // ==========================================
-function loadDash() {
+async function loadDash() {
   const contentEl = document.getElementById('dash-content');
   contentEl.innerHTML = `
     <div style="text-align:center;padding:28px;color:var(--muted);">
       <div class="spin" style="width:28px;height:28px;border-width:3px;border-color:rgba(100,116,139,.3);border-top-color:var(--muted);"></div>
       <p style="margin-top:10px;font-size:13px;">กำลังดึงยอดคงคลังล่าสุด...</p>
     </div>`;
-
-  google.script.run
-    .withSuccessHandler(data => {
-      const keys = Object.keys(data).sort();
-      if (!keys.length) {
-        contentEl.innerHTML = '<p style="text-align:center;padding:20px;color:var(--muted);">ไม่พบข้อมูลพัสดุในระบบ</p>';
-        return;
-      }
-      contentEl.innerHTML = keys.map(prefix => `
-        <div class="stock-group">
-          <div class="cat-head">หมวด ${prefix} (${data[prefix].length} รายการ)</div>
-          <table class="stock-tbl">
-            <tbody>
-              ${data[prefix].map(item => `
-                <tr>
-                  <td style="font-size:11px;color:var(--muted); width: 22%;">${item.id || ''}</td>
-                  <td style="width: 53%;">${item.name || ''}</td>
-                  <td class="stock-n ${item.stock <= 5 ? 'low' : ''}" style="width: 25%;">
-                    ${item.stock}<br>
-                    <span style="font-size:10px;font-weight:400;color:var(--muted);">${item.unit || 'หน่วย'}</span>
-                  </td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-        </div>
-      `).join('');
-    })
-    .withFailureHandler(() => {
-      contentEl.innerHTML = '<p style="text-align:center;color:var(--danger);padding:20px;">เชื่อมต่อฐานข้อมูลสต็อกพัสดุล้มเหลว</p>';
-    })
-    .getDashboardData();
+  try {
+    const data = await callGAS("getDashboardData");
+    const keys = Object.keys(data).sort();
+    if (!keys.length) {
+      contentEl.innerHTML = '<p style="text-align:center;padding:20px;color:var(--muted);">ไม่พบข้อมูลพัสดุในระบบ</p>';
+      return;
+    }
+    contentEl.innerHTML = keys.map(prefix => `
+      <div class="stock-group">
+        <div class="cat-head">หมวด ${prefix} (${data[prefix].length} รายการ)</div>
+        <table class="stock-tbl">
+          <tbody>
+            ${data[prefix].map(item => `
+              <tr>
+                <td style="font-size:11px;color:var(--muted); width: 22%;">${item.id || ''}</td>
+                <td style="width: 53%;">${item.name || ''}</td>
+                <td class="stock-n ${item.stock <= 5 ? 'low' : ''}" style="width: 25%;">
+                  ${item.stock}<br>
+                  <span style="font-size:10px;font-weight:400;color:var(--muted);">${item.unit || 'หน่วย'}</span>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `).join('');
+  } catch(e) {
+    contentEl.innerHTML = '<p style="text-align:center;color:var(--danger);padding:20px;">เชื่อมต่อฐานข้อมูลสต็อกพัสดุล้มเหลว</p>';
+  }
 }
 
 // ==========================================
@@ -1021,19 +944,16 @@ function loadDash() {
 // ==========================================
 function initSiDefaults() {
   const now = new Date();
-  const dateStr = now.toISOString().slice(0, 10);
-  const timeStr = now.toTimeString().slice(0, 5);
   const dateEl = document.getElementById('si-date');
   const timeEl = document.getElementById('si-time');
-  if (!dateEl.value) dateEl.value = dateStr;
-  if (!timeEl.value) timeEl.value = timeStr;
+  if (!dateEl.value) dateEl.value = now.toISOString().slice(0, 10);
+  if (!timeEl.value) timeEl.value = now.toTimeString().slice(0, 5);
 }
 
 function onSiSearch(val) {
   document.getElementById('si-clear').style.display = val ? 'block' : 'none';
   if (!val.trim()) { hideSiSuggest(); return; }
-  const matched = filterItems(val.trim());
-  showSiSuggest(matched, val.trim());
+  showSiSuggest(filterItems(val.trim()), val.trim());
 }
 
 function showSiSuggest(items, query) {
@@ -1060,29 +980,27 @@ function clearSiSearch() {
   hideSiSuggest();
 }
 
-function pickSiItem(id) {
+async function pickSiItem(id) {
   hideSiSuggest();
   clearSiSearch();
   showOverlay('กำลังดึงข้อมูลพัสดุ...');
-  google.script.run
-    .withSuccessHandler(item => {
-      hideOverlay();
-      if (item) {
-        siItem = item;
-        document.getElementById('si-r-name').textContent  = item.name;
-        document.getElementById('si-r-id').textContent    = item.id;
-        document.getElementById('si-r-stock').textContent = 'คงเหลือ: ' + item.stock + ' ' + item.unit;
-        document.getElementById('si-qty').value = 1;
-        document.getElementById('si-result-panel').style.display = 'block';
-      } else {
-        toast('ไม่พบพัสดุรหัส: ' + id, 'err');
-      }
-    })
-    .withFailureHandler(err => {
-      hideOverlay();
-      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
-    })
-    .getItemDetails(id);
+  try {
+    const item = await callGAS("getItemDetails", { id });
+    hideOverlay();
+    if (item) {
+      siItem = item;
+      document.getElementById('si-r-name').textContent  = item.name;
+      document.getElementById('si-r-id').textContent    = item.id;
+      document.getElementById('si-r-stock').textContent = 'คงเหลือ: ' + item.stock + ' ' + item.unit;
+      document.getElementById('si-qty').value = 1;
+      document.getElementById('si-result-panel').style.display = 'block';
+    } else {
+      toast('ไม่พบพัสดุรหัส: ' + id, 'err');
+    }
+  } catch(e) {
+    hideOverlay();
+    toast('ระบบขัดข้อง: ' + e.message, 'err');
+  }
 }
 
 function changeSiQty(diff) {
@@ -1145,7 +1063,7 @@ function renderSiCart() {
   `).join('');
 }
 
-function sendStockIn() {
+async function sendStockIn() {
   if (!siCart.length) return toast('ยังไม่มีรายการพัสดุ', 'err');
 
   const dateStr    = document.getElementById('si-date').value;
@@ -1163,28 +1081,23 @@ function sendStockIn() {
   btn.innerHTML = '<span class="spin"></span> กำลังบันทึกข้อมูล...';
   showOverlay('กำลังเพิ่มยอดสต็อกพัสดุเข้าคลัง...');
 
-  google.script.run
-    .withSuccessHandler(res => {
-      hideOverlay();
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
-      if (res.error) return toast(res.error, 'err');
-
-      siCart = [];
-      renderSiCart();
-      document.getElementById('si-company').value  = '';
-      document.getElementById('si-delivery').value = '';
-
-      toast('บันทึกรับพัสดุเข้าคลังเรียบร้อยแล้ว!', 'ok');
-      loadAllItems();
-    })
-    .withFailureHandler(err => {
-      hideOverlay();
-      btn.disabled = false;
-      btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
-      toast('ระบบขัดข้อง: ' + (err.message || err), 'err');
-    })
-    .submitStockIn({ items: siCart, dateStr, timeStr, company, deliveryNo });
+  try {
+    await callGAS("submitStockIn", { payload: { items: siCart, dateStr, timeStr, company, deliveryNo } });
+    hideOverlay();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
+    siCart = [];
+    renderSiCart();
+    document.getElementById('si-company').value  = '';
+    document.getElementById('si-delivery').value = '';
+    toast('บันทึกรับพัสดุเข้าคลังเรียบร้อยแล้ว!', 'ok');
+    loadAllItems();
+  } catch(e) {
+    hideOverlay();
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-box-arrow-in-down"></i> ยืนยันรับพัสดุเข้าคลัง';
+    toast('ระบบขัดข้อง: ' + e.message, 'err');
+  }
 }
 
 // ==========================================
